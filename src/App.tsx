@@ -1,121 +1,89 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useEffect, useState } from "react";
+import TodoItem from "./Todoitem";
+
+type Priority = "Urgente" | "Moyenne" | "Basse"
+
+type Todo ={
+   id: number;
+   text: string;
+   priority: Priority; 
+}
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [input, setInput] = useState<string>("")
+  const [priority, setPriority] = useState<Priority>("Moyenne")
+
+  const savedTodos = localStorage.getItem("todos")
+  const intitialTodos = savedTodos ? JSON.parse(savedTodos) : []
+  const [todos, setTodos] = useState<Todo[]>(intitialTodos)
+  const [filter, setFilter] = useState<Priority | "Tous">("Tous")
+
+  useEffect(() =>{
+    localStorage.setItem("todos" , JSON.stringify(todos))
+  }, [todos])
+
+  function addTodo(){
+    if (input.trim() == ""){
+      return
+    }
+
+    const newTodo: Todo = {
+      id: Date.now(),
+      text: input.trim(),
+      priority: priority
+    }
+
+    const newTodos = [newTodo , ...todos]
+    setTodos(newTodos)
+    setInput("")
+    setPriority("Moyenne")
+    console.log(todos)
+  }
+
+  let filteredTodos: Todo[] = []
+
+  if (filter === "Tous"){
+    filteredTodos = todos
+  }else{
+  filteredTodos = todos.filter((todo) => todo.priority === filter)
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="flex justify-center">
+      <div className="w-2/3 flex flex-col gap-4 my-15 bg-base-300 p-5 rounded-2xl">
+        <div className="flex gap-4">
+          <input type="text" className="input w-full" placeholder="Ajouter une tâche..."  value={input} onChange={(e) => setInput(e.target.value)}/>
+          <select className="select w-full" value={priority} onChange={(e) => setPriority(e.target.value as Priority)}>
+             <option value="Urgente">Urgente</option>
+             <option value="Moyenne">Moyenne</option>
+             <option value="Basse">Basse</option>
+          </select>
+          <button onClick={addTodo} className="btn btn-primary">
+             Ajouter
+          </button>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        <div className="space-y-2 flex-1 h-fit">
+           <div className="flex flex-wrap gap-4">
+            <button className={`btn btn-soft ${filter === "Tous" ? "btn-primary" : ""}`}
+            onClick={() => setFilter("Tous")}
+            >
+              Tous
+            </button>
+           </div>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+           {filteredTodos.length > 0 ? (
+            <ul className="divide-y divide-primary/20">
+              { filteredTodos.map((todo) => (
+                <li key={todo.id}><TodoItem todo={todo}/></li>
+              ))}
+            </ul>
+           ) : (
+            <div >test</div>
+           )}
+        </div>
+      </div>
+    </div>
   )
 }
 
